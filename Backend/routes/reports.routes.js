@@ -11,7 +11,8 @@ import {
     getCommunityStats,
     uploadReportMedia,
     uploadSingleMedia,
-    getAdminReports
+    getAdminReports,
+    assignReport
 } from '../controllers/reports.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 
@@ -46,5 +47,8 @@ router.route('/:reportId/resolve').post(
     ]),
     resolveReport
 );   // Admin only - allows photo uploads
+
+// Assign report to field admin
+router.route('/:reportId/assign').post(assignReport);
 
 export default router;

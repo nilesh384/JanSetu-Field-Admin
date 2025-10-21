@@ -6,6 +6,22 @@ import { sendReportResolvedNotification } from "../services/notificationService.
 // Helper to convert DB timestamp values to ISO strings (null-safe)
 const toISO = (val) => (val ? new Date(val).toISOString() : null);
 
+// Helper to ensure PostgreSQL array is properly converted to JavaScript array
+const parseArrayField = (val) => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  // If it's a string representation of PostgreSQL array, parse it
+  if (typeof val === 'string') {
+    // PostgreSQL array format: {item1,item2} or {"item1","item2"}
+    const cleaned = val.replace(/^{|}$/g, '').trim();
+    if (!cleaned) return [];
+    // Split by comma and clean up quotes
+    return cleaned.split(',').map(item => item.replace(/^"|"$/g, '').trim()).filter(Boolean);
+  }
+  return [];
+};
+
+
 /**
  * Compute automatic priority based on:
  *  - number of unresolved reports in the area (radiusMeters)
@@ -448,11 +464,21 @@ const getReportById = async (req, res) => {
                 users.full_name as user_name,
                 users.email as user_email,
                 users.phone_number as user_phone,
-                admins.full_name as resolved_by,
-                admins.role as resolved_by_role
+                resolved_admin.full_name as resolved_by,
+                resolved_admin.role as resolved_by_role,
+                assigned_admin.id as assigned_admin_id,
+                assigned_admin.full_name as assigned_admin_name,
+                assigned_admin.email as assigned_admin_email,
+                assigned_admin.role as assigned_admin_role,
+                COALESCE(sp.upvotes, 0) as upvotes,
+                COALESCE(sp.downvotes, 0) as downvotes,
+                COALESCE(sp.view_count, 0) as view_count,
+                COALESCE(sp.share_count, 0) as share_count
             FROM reports r
             LEFT JOIN users ON r.user_id = users.id
-            LEFT JOIN admins ON r.resolved_by_admin_id = admins.id
+            LEFT JOIN admins resolved_admin ON r.resolved_by_admin_id = resolved_admin.id
+            LEFT JOIN admins assigned_admin ON r.assigned_admin_id = assigned_admin.id
+            LEFT JOIN social_posts sp ON r.id = sp.report_id
             WHERE r.id = $1
         `;
         const queryParams = [reportId];
@@ -490,21 +516,39 @@ const getReportById = async (req, res) => {
             address: report.address,
             department: report.department,
             isResolved: report.is_resolved,
+            status: report.status,
+            assignedAdminId: report.assigned_admin_id,
+            assignedAdminName: report.assigned_admin_name,
+            assignedAdminEmail: report.assigned_admin_email,
+            assignedAdminRole: report.assigned_admin_role,
             createdAt: toISO(report.created_at),
+            updatedAt: toISO(report.updated_at),
             resolvedAt: toISO(report.resolved_at),
-            resolvedMediaUrls: report.resolved_media_urls,
+            resolvedMediaUrls: parseArrayField(report.resolved_media_urls),
+            resolvedPhotos: parseArrayField(report.resolved_media_urls),
             resolutionNotes: report.resolution_note,
             resolvedByAdminId: report.resolved_by_admin_id,
             resolvedBy: report.resolved_by,
             resolvedByRole: report.resolved_by_role,
-            timeTakenToResolve: report.time_taken_to_resolve
+            timeTakenToResolve: report.time_taken_to_resolve,
+            upvotes: report.upvotes,
+            downvotes: report.downvotes,
+            viewCount: report.view_count,
+            shareCount: report.share_count,
+            user: {
+                fullName: report.user_name,
+                email: report.user_email,
+                phoneNumber: report.user_phone
+            }
         };
 
         console.log('✅ Report found:', reportId);
 
         res.status(200).json({
             success: true,
-            report: mappedReport
+            data: mappedReport,
+            report: mappedReport,
+            message: "Report fetched successfully"
         });
 
     } catch (error) {
@@ -1552,9 +1596,12 @@ const getAdminReports = async (req, res) => {
             SELECT
                 r.*,
                 u.full_name as user_name,
-                u.phone_number as user_phone
+                u.phone_number as user_phone,
+                assigned_admin.full_name as assigned_admin_name,
+                assigned_admin.email as assigned_admin_email
             FROM reports r
             LEFT JOIN users u ON r.user_id = u.id
+            LEFT JOIN admins assigned_admin ON r.assigned_admin_id = assigned_admin.id
             WHERE 1=1
         `;
         const queryParams = [];
@@ -1694,9 +1741,13 @@ const getAdminReports = async (req, res) => {
             isResolved: report.is_resolved,
             resolvedBy: report.resolved_by,
             resolutionNote: report.resolution_note,
-            resolvedMediaUrls: report.resolved_media_urls,
+            resolvedMediaUrls: parseArrayField(report.resolved_media_urls),
+            resolvedPhotos: parseArrayField(report.resolved_media_urls),
             timeTakenToResolve: report.time_taken_to_resolve,
             status: report.status,
+            assignedAdminId: report.assigned_admin_id,
+            assignedAdminName: report.assigned_admin_name,
+            assignedAdminEmail: report.assigned_admin_email,
             createdAt: toISO(report.created_at),
             updatedAt: toISO(report.updated_at)
         }));
@@ -1737,6 +1788,112 @@ const getAdminReports = async (req, res) => {
     }
 };
 
+// Assign report to field admin
+const assignReport = async (req, res) => {
+    try {
+        const { reportId } = req.params;
+        const { assignedAdminId, assignedBy } = req.body;
+
+        console.log('🔄 Assigning report:', reportId, 'to admin:', assignedAdminId);
+
+        if (!assignedAdminId) {
+            return res.status(400).json({
+                success: false,
+                message: "Field admin ID is required"
+            });
+        }
+
+        // Verify the field admin exists and is active
+        const adminCheckQuery = `
+            SELECT id, email, full_name, role, is_active
+            FROM admins
+            WHERE id = $1
+        `;
+        
+        const adminResult = await queryOne(adminCheckQuery, [assignedAdminId]);
+
+        if (!adminResult) {
+            return res.status(404).json({
+                success: false,
+                message: "Field admin not found"
+            });
+        }
+
+        if (!adminResult.is_active) {
+            return res.status(400).json({
+                success: false,
+                message: "Field admin is not active"
+            });
+        }
+
+        // Check if report exists
+        const reportCheckQuery = `
+            SELECT id, title, is_resolved, status
+            FROM reports
+            WHERE id = $1
+        `;
+        
+        const reportResult = await queryOne(reportCheckQuery, [reportId]);
+
+        if (!reportResult) {
+            return res.status(404).json({
+                success: false,
+                message: "Report not found"
+            });
+        }
+
+        if (reportResult.is_resolved) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot assign an already resolved report"
+            });
+        }
+
+        // Update the report with assigned admin
+        const updateQuery = `
+            UPDATE reports
+            SET 
+                assigned_admin_id = $1,
+                status = 'pending',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2
+            RETURNING *
+        `;
+
+        const result = await queryOne(updateQuery, [assignedAdminId, reportId]);
+
+        console.log('✅ Report assigned successfully:', reportId);
+
+        // Map the result to camelCase
+        const mappedReport = {
+            id: result.id,
+            assignedAdminId: result.assigned_admin_id,
+            status: result.status,
+            updatedAt: toISO(result.updated_at),
+            assignedTo: {
+                id: adminResult.id,
+                name: adminResult.full_name,
+                email: adminResult.email,
+                role: adminResult.role
+            }
+        };
+
+        res.status(200).json({
+            success: true,
+            message: `Report assigned to ${adminResult.full_name}`,
+            data: mappedReport
+        });
+
+    } catch (error) {
+        console.error('❌ Error assigning report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+};
+
 export {
     createReport,
     getUserReports,
@@ -1749,5 +1906,6 @@ export {
     getCommunityStats,
     uploadReportMedia,
     uploadSingleMedia,
-    getAdminReports
+    getAdminReports,
+    assignReport
 };
