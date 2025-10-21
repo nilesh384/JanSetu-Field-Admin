@@ -373,9 +373,6 @@ This is a government civic management project. Contributions should focus on:
 - Accessibility enhancements
 - Documentation updates
 
-## 📄 License
-
-Government project - Internal use only
 
 ## 👥 Team
 
