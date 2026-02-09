@@ -16,7 +16,8 @@ export interface Report {
   description: string;
   category: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
-  status: 'pending' | 'in_progress' | 'resolved' | 'rejected';
+  status: 'pending' | 'assigned' | 'in_progress' | 'resolved' | 'rejected';
+  displayStatus?: string; // Optional display status for field admin mapping
   mediaUrls?: string[];
   audioUrl?: string;
   latitude: number;

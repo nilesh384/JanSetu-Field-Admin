@@ -14,10 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { storage } from '../../utils/storage';
 import { reportService } from '../../services/report.service';
 import { Admin, DashboardStats, Report } from '../../types';
-import { COLORS, CATEGORIES } from '../../constants';
+import { COLORS, CATEGORIES, getFieldAdminStatusLabel } from '../../constants';
 
 const { width } = Dimensions.get('window');
 
@@ -149,23 +150,28 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#6366F1" />
+        <ActivityIndicator size="large" color="#6366F1" />
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#6366F1" />
       <ScrollView
         style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />}
         showsVerticalScrollIndicator={false}
       >
-      {/* Enhanced Welcome Section */}
-      <View style={styles.welcomeSection}>
+      {/* Enhanced Welcome Section with Gradient */}
+      <ExpoLinearGradient
+        colors={['#6366F1', '#8B5CF6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.welcomeSection}
+      >
         <View style={styles.greetingRow}>
           <View>
             <Text style={styles.greetingText}>{getTimeOfDayGreeting()},</Text>
@@ -188,41 +194,81 @@ export default function DashboardScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </ExpoLinearGradient>
 
       {/* Enhanced Stats Grid */}
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, { backgroundColor: COLORS.primary }]}>
+        <TouchableOpacity 
+          style={[styles.statCard, { backgroundColor: '#6366F1' }]}
+          onPress={() => {
+            router.push('/(tabs)/reports');
+            // Clear any filters to show all reports
+            storage.setItem('reportFilter', 'all');
+          }}
+          activeOpacity={0.7}
+        >
           <View style={styles.statIconContainer}>
-            <Ionicons name="briefcase" size={28} color={COLORS.white} />
+            <Ionicons name="briefcase-outline" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.statValue}>{stats?.totalAssigned || 0}</Text>
           <Text style={styles.statLabel}>Total Assigned</Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={[styles.statCard, { backgroundColor: COLORS.warning }]}>
+        <TouchableOpacity 
+          style={[styles.statCard, { backgroundColor: '#F59E0B' }]}
+          onPress={() => {
+            router.push('/(tabs)/reports');
+            // Store filter preference for reports screen
+            storage.setItem('reportFilter', 'pending');
+          }}
+          activeOpacity={0.7}
+        >
           <View style={styles.statIconContainer}>
-            <Ionicons name="time" size={28} color={COLORS.white} />
+            <Ionicons name="time-outline" size={24} color="#FFFFFF" />
           </View>
-          <Text style={styles.statValue}>{stats?.pending || 0}</Text>
+          <Text style={styles.statValue}>{stats?.pending ?? 0}</Text>
           <Text style={styles.statLabel}>Pending</Text>
-        </View>
+          {(stats?.pending ?? 0) > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>{stats?.pending ?? 0}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
-        <View style={[styles.statCard, { backgroundColor: COLORS.status.in_progress }]}>
+        <TouchableOpacity 
+          style={[styles.statCard, { backgroundColor: '#8B5CF6' }]}
+          onPress={() => {
+            router.push('/(tabs)/reports');
+            storage.setItem('reportFilter', 'in_progress');
+          }}
+          activeOpacity={0.7}
+        >
           <View style={styles.statIconContainer}>
-            <Ionicons name="construct" size={28} color={COLORS.white} />
+            <Ionicons name="construct-outline" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
           <Text style={styles.statLabel}>In Progress</Text>
-        </View>
+          {(stats?.inProgress || 0) > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>{stats?.inProgress || 0}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
-        <View style={[styles.statCard, { backgroundColor: COLORS.success }]}>
+        <TouchableOpacity 
+          style={[styles.statCard, { backgroundColor: '#10B981' }]}
+          onPress={() => {
+            router.push('/(tabs)/reports');
+            storage.setItem('reportFilter', 'resolved');
+          }}
+          activeOpacity={0.7}
+        >
           <View style={styles.statIconContainer}>
-            <Ionicons name="checkmark-circle" size={28} color={COLORS.white} />
+            <Ionicons name="checkmark-circle-outline" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.statValue}>{stats?.completedToday || 0}</Text>
           <Text style={styles.statLabel}>Completed Today</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Performance Overview */}
@@ -265,7 +311,7 @@ export default function DashboardScreen() {
       {/* Priority Distribution */}
       {todayReports.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today's Priority Breakdown</Text>
+          <Text style={styles.sectionTitle}>Today&apos;s Priority Breakdown</Text>
           <View style={styles.priorityCard}>
             {getPriorityDistribution().map(({ priority, count, color, percentage }) => (
               <View key={priority} style={styles.priorityRow}>
@@ -286,7 +332,7 @@ export default function DashboardScreen() {
       {/* Today's Reports */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Reports</Text>
+          <Text style={styles.sectionTitle}>Today&apos;s Reports</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/reports')}>
             <Text style={styles.viewAllLink}>View All →</Text>
           </TouchableOpacity>
@@ -311,7 +357,7 @@ export default function DashboardScreen() {
                     <Text style={styles.priorityText}>{report.priority.toUpperCase()}</Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(report.status) }]}>
-                    <Text style={styles.statusText}>{report.status.replace('_', ' ').toUpperCase()}</Text>
+                    <Text style={styles.statusText}>{getFieldAdminStatusLabel(report.status)}</Text>
                   </View>
                 </View>
                 <Text style={styles.reportTime}>{formatTime(report.createdAt)}</Text>
@@ -397,16 +443,16 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
-    </SafeAreaView>
+      <View style={{ height: 100 }} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   scrollView: {
     flex: 1,
@@ -415,12 +461,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   welcomeSection: {
-    backgroundColor: COLORS.primary,
     padding: 24,
-    paddingTop: 24,
+    paddingTop: 40,
+    paddingBottom: 32,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   greetingRow: {
     flexDirection: 'row',
@@ -429,19 +477,18 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: 16,
-    color: COLORS.white,
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   nameText: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginTop: 4,
+    letterSpacing: 0.3,
   },
   departmentText: {
     fontSize: 14,
-    color: COLORS.white,
-    opacity: 0.8,
+    color: 'rgba(255, 255, 255, 0.85)',
     marginTop: 4,
   },
   timeContainer: {
@@ -449,13 +496,12 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 20,
-    fontWeight: '600',
-    color: COLORS.white,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   dateText: {
     fontSize: 12,
-    color: COLORS.white,
-    opacity: 0.8,
+    color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 2,
   },
   statsGrid: {
@@ -470,33 +516,57 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   statIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   statValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.white,
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.95)',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   section: {
     padding: 16,
@@ -508,24 +578,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.gray[900],
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+    letterSpacing: 0.3,
   },
   viewAllLink: {
     fontSize: 14,
-    color: COLORS.primary,
+    color: '#6366F1',
     fontWeight: '600',
   },
   performanceCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
   performanceHeader: {
     flexDirection: 'row',
@@ -536,29 +607,29 @@ const styles = StyleSheet.create({
   performanceTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray[800],
+    color: '#1E293B',
   },
   completionBadge: {
-    backgroundColor: COLORS.success,
+    backgroundColor: '#10B981',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   completionText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   progressBar: {
     height: 8,
-    backgroundColor: COLORS.gray[200],
+    backgroundColor: '#E2E8F0',
     borderRadius: 4,
     marginBottom: 20,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.success,
+    backgroundColor: '#10B981',
     borderRadius: 4,
   },
   performanceRow: {
@@ -566,26 +637,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[100],
+    borderBottomColor: '#F1F5F9',
   },
   performanceLabel: {
     fontSize: 14,
-    color: COLORS.gray[600],
+    color: '#64748B',
   },
   performanceValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray[900],
+    color: '#1E293B',
   },
   priorityCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
   priorityRow: {
     flexDirection: 'row',
@@ -606,7 +677,7 @@ const styles = StyleSheet.create({
   },
   priorityLabel: {
     fontSize: 14,
-    color: COLORS.gray[700],
+    color: '#475569',
     fontWeight: '500',
   },
   priorityStats: {
@@ -616,45 +687,45 @@ const styles = StyleSheet.create({
   },
   priorityCount: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.gray[900],
+    fontWeight: '700',
+    color: '#1E293B',
   },
   priorityPercent: {
     fontSize: 12,
-    color: COLORS.gray[500],
+    color: '#94A3B8',
   },
   emptyState: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 40,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
   emptyText: {
     fontSize: 16,
-    color: COLORS.gray[600],
+    color: '#64748B',
     marginTop: 12,
     fontWeight: '500',
   },
   emptySubtext: {
     fontSize: 14,
-    color: COLORS.gray[400],
+    color: '#94A3B8',
     marginTop: 4,
   },
   reportCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
   reportHeader: {
     flexDirection: 'row',

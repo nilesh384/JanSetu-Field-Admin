@@ -16,10 +16,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { storage } from '../../utils/storage';
 import { reportService } from '../../services/report.service';
 import { Report } from '../../types';
-import { COLORS, PRIORITY_OPTIONS, STATUS_OPTIONS } from '../../constants';
+import { COLORS, PRIORITY_OPTIONS, STATUS_OPTIONS, getFieldAdminStatusLabel } from '../../constants';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
@@ -183,32 +184,38 @@ export default function MapScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#6366F1" />
+        <ActivityIndicator size="large" color="#6366F1" />
+      </View>
     );
   }
 
   if (!location) {
     return (
-      <SafeAreaView style={styles.errorContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
-        <Ionicons name="location-outline" size={64} color={COLORS.gray[400]} />
+      <View style={styles.errorContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#6366F1" />
+        <Ionicons name="location-outline" size={64} color="#CBD5E1" />
         <Text style={styles.errorText}>Unable to get your location</Text>
+        <Text style={styles.errorSubtext}>Please enable location services</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadLocationAndReports}>
           <Text style={styles.retryText}>Retry</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
+    <View style={styles.container}>
+      <StatusBar backgroundColor="#6366F1" barStyle="light-content" />
       
       {/* Header Section with Statistics */}
-      <View style={styles.header}>
+      <ExpoLinearGradient
+        colors={['#6366F1', '#8B5CF6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>Reports Map</Text>
         <Text style={styles.headerSubtitle}>Track and manage all field reports</Text>
         
@@ -220,24 +227,24 @@ export default function MapScreen() {
           contentContainerStyle={styles.statsContent}
         >
           <View style={styles.statCard}>
-            <MaterialCommunityIcons name="clipboard-list-outline" size={24} color={COLORS.primary} />
-            <Text style={styles.statNumber}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Total Reports</Text>
+            <MaterialCommunityIcons name="clipboard-list-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.statValue}>{stats.total}</Text>
+            <Text style={styles.statLabel}>Total</Text>
           </View>
-          <View style={[styles.statCard, styles.criticalCard]}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={24} color="#ef4444" />
-            <Text style={[styles.statNumber, { color: '#ef4444' }]}>{stats.critical}</Text>
+          <View style={styles.statCard}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.statValue}>{stats.critical}</Text>
             <Text style={styles.statLabel}>Critical</Text>
           </View>
-          <View style={[styles.statCard, styles.highCard]}>
-            <MaterialCommunityIcons name="trending-up" size={24} color="#f97316" />
-            <Text style={[styles.statNumber, { color: '#f97316' }]}>{stats.high}</Text>
-            <Text style={styles.statLabel}>High Priority</Text>
+          <View style={styles.statCard}>
+            <MaterialCommunityIcons name="trending-up" size={20} color="#FFFFFF" />
+            <Text style={styles.statValue}>{stats.high}</Text>
+            <Text style={styles.statLabel}>High</Text>
           </View>
-          <View style={[styles.statCard, styles.lowCard]}>
-            <MaterialCommunityIcons name="check-circle-outline" size={24} color="#22c55e" />
-            <Text style={[styles.statNumber, { color: '#22c55e' }]}>{stats.low}</Text>
-            <Text style={styles.statLabel}>Low Priority</Text>
+          <View style={styles.statCard}>
+            <MaterialCommunityIcons name="check-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.statValue}>{stats.low}</Text>
+            <Text style={styles.statLabel}>Low</Text>
           </View>
         </ScrollView>
 
@@ -245,17 +252,17 @@ export default function MapScreen() {
         <View style={styles.searchFilterContainer}>
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <MaterialCommunityIcons name="magnify" size={20} color={COLORS.secondary} />
+            <MaterialCommunityIcons name="magnify" size={20} color="rgba(255, 255, 255, 0.9)" />
             <TextInput
               style={styles.searchInput}
               placeholder="Search reports..."
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholderTextColor={COLORS.secondary}
+              placeholderTextColor="rgba(255, 255, 255, 0.7)"
             />
             {searchQuery ? (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialCommunityIcons name="close" size={20} color={COLORS.secondary} />
+                <MaterialCommunityIcons name="close" size={20} color="rgba(255, 255, 255, 0.9)" />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -265,7 +272,7 @@ export default function MapScreen() {
             style={styles.filterButton}
             onPress={() => setShowFilterModal(true)}
           >
-            <MaterialCommunityIcons name="filter-variant" size={20} color={COLORS.white} />
+            <MaterialCommunityIcons name="filter-variant" size={20} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* Map Type Toggle */}
@@ -276,7 +283,7 @@ export default function MapScreen() {
             <MaterialCommunityIcons 
               name={mapType === 'standard' ? 'satellite-variant' : 'map-outline'} 
               size={20} 
-              color={COLORS.white} 
+              color="#FFFFFF" 
             />
           </TouchableOpacity>
         </View>
@@ -289,7 +296,7 @@ export default function MapScreen() {
                 <View style={styles.filterChip}>
                   <Text style={styles.filterChipText}>Search: {searchQuery}</Text>
                   <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <MaterialCommunityIcons name="close" size={16} color={COLORS.white} />
+                    <MaterialCommunityIcons name="close" size={16} color="#6366F1" />
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -297,7 +304,7 @@ export default function MapScreen() {
                 <View style={styles.filterChip}>
                   <Text style={styles.filterChipText}>Priority: {selectedPriority}</Text>
                   <TouchableOpacity onPress={() => setSelectedPriority(null)}>
-                    <MaterialCommunityIcons name="close" size={16} color={COLORS.white} />
+                    <MaterialCommunityIcons name="close" size={16} color="#6366F1" />
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -305,7 +312,7 @@ export default function MapScreen() {
                 <View style={styles.filterChip}>
                   <Text style={styles.filterChipText}>Status: {selectedStatus}</Text>
                   <TouchableOpacity onPress={() => setSelectedStatus(null)}>
-                    <MaterialCommunityIcons name="close" size={16} color={COLORS.white} />
+                    <MaterialCommunityIcons name="close" size={16} color="#6366F1" />
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -315,7 +322,7 @@ export default function MapScreen() {
             </ScrollView>
           </View>
         )}
-      </View>
+      </ExpoLinearGradient>
       {/* Enhanced Map with Filtered Reports */}
       <MapView
         ref={mapRef}
@@ -461,7 +468,7 @@ export default function MapScreen() {
                         <Text style={styles.badgeText}>{selectedReport.priority}</Text>
                       </View>
                       <View style={styles.statusBadge}>
-                        <Text style={styles.statusBadgeText}>{selectedReport.status}</Text>
+                        <Text style={styles.statusBadgeText}>{getFieldAdminStatusLabel(selectedReport.status)}</Text>
                       </View>
                     </View>
                   </View>
@@ -506,45 +513,61 @@ export default function MapScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F8FAFC',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F8FAFC',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    backgroundColor: '#F8FAFC',
   },
   errorText: {
     fontSize: 16,
-    color: COLORS.gray[500],
+    color: '#64748B',
     marginTop: 16,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  errorSubtext: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: 4,
     textAlign: 'center',
   },
   retryButton: {
     marginTop: 24,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
+    backgroundColor: '#6366F1',
+    borderRadius: 12,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   retryText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.white,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   map: {
     flex: 1,
+    marginBottom: 80,
   },
   marker: {
     width: 40,
@@ -553,20 +576,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: COLORS.white,
+    borderColor: '#FFFFFF',
   },
   infoCard: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 100,
     left: 20,
     right: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 8,
   },
   infoHeader: {
@@ -583,17 +606,17 @@ const styles = StyleSheet.create({
   priorityText: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: '#FFFFFF',
   },
   reportTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.gray[900],
+    color: '#1E293B',
     marginBottom: 4,
   },
   reportCategory: {
     fontSize: 14,
-    color: COLORS.gray[600],
+    color: '#64748B',
   },
   closeButton: {
     width: 32,
@@ -602,24 +625,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#6366F1',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     padding: 14,
     borderRadius: 12,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   viewButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.white,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   legend: {
     position: 'absolute',
     top: 20,
     right: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     shadowColor: '#000',
@@ -631,7 +659,7 @@ const styles = StyleSheet.create({
   legendTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: COLORS.gray[700],
+    color: '#1E293B',
     marginBottom: 8,
   },
   legendItems: {
@@ -649,27 +677,27 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 11,
-    color: COLORS.gray[600],
+    color: '#64748B',
   },
-  // New styles for enhanced UI
+  // Modern Header with Gradient
   header: {
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[200],
+    padding: 20,
+    paddingTop: 40,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.gray[900],
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 4,
+    letterSpacing: 0.3,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: COLORS.gray[600],
-    marginBottom: 16,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginBottom: 20,
   },
   statsContainer: {
     marginBottom: 16,
@@ -678,43 +706,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   statCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    padding: 12,
     marginHorizontal: 4,
-    minWidth: 120,
+    minWidth: 90,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
     borderWidth: 1,
-    borderColor: COLORS.gray[100],
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   criticalCard: {
-    borderColor: '#fecaca',
-    backgroundColor: '#fef2f2',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   highCard: {
-    borderColor: '#fed7aa',
-    backgroundColor: '#fff7ed',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   lowCard: {
-    borderColor: '#bbf7d0',
-    backgroundColor: '#f0fdf4',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 4,
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.gray[900],
-    marginTop: 8,
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 4,
   },
   statLabel: {
-    fontSize: 12,
-    color: COLORS.gray[600],
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 2,
     textAlign: 'center',
+    fontWeight: '600',
   },
   searchFilterContainer: {
     flexDirection: 'row',
@@ -726,38 +756,32 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.gray[50],
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
-    fontSize: 16,
-    color: COLORS.gray[900],
+    fontSize: 15,
+    color: '#FFFFFF',
   },
   filterButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 12,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   mapTypeButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 12,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   activeFiltersContainer: {
     marginTop: 8,
@@ -765,7 +789,7 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -773,26 +797,26 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterChipText: {
-    color: COLORS.white,
+    color: '#6366F1',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   clearFiltersButton: {
-    backgroundColor: COLORS.gray[600],
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   clearFiltersText: {
-    color: COLORS.white,
+    color: '#64748B',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   customMarker: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderWidth: 3,
     justifyContent: 'center',
     alignItems: 'center',
@@ -808,16 +832,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   filterModal: {
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingTop: 20,
     maxHeight: height * 0.8,
   },
   reportModal: {
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingTop: 20,
     maxHeight: height * 0.7,
   },
@@ -828,12 +852,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[200],
+    borderBottomColor: '#F1F5F9',
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.gray[900],
+    fontWeight: '700',
+    color: '#1E293B',
   },
   filterContent: {
     padding: 20,
@@ -843,8 +867,8 @@ const styles = StyleSheet.create({
   },
   filterSectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.gray[900],
+    fontWeight: '700',
+    color: '#1E293B',
     marginBottom: 12,
   },
   filterOptions: {
@@ -855,22 +879,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.gray[50],
-    borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
   selectedFilterOption: {
-    backgroundColor: COLORS.primary + '20',
-    borderColor: COLORS.primary,
+    backgroundColor: '#EEF2FF',
+    borderColor: '#6366F1',
   },
   filterOptionText: {
     fontSize: 14,
-    color: COLORS.gray[700],
+    color: '#64748B',
     marginLeft: 8,
+    fontWeight: '500',
   },
   selectedFilterText: {
-    color: COLORS.primary,
-    fontWeight: '600',
+    color: '#6366F1',
+    fontWeight: '700',
   },
   priorityIndicator: {
     width: 12,
@@ -882,32 +907,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray[200],
+    borderTopColor: '#F1F5F9',
     gap: 12,
   },
   clearButton: {
     flex: 1,
-    backgroundColor: COLORS.gray[100],
+    backgroundColor: '#F1F5F9',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
   },
   clearButtonText: {
-    color: COLORS.gray[700],
+    color: '#64748B',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   applyButton: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#6366F1',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   applyButtonText: {
-    color: COLORS.white,
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   reportModalHeader: {
     flexDirection: 'row',
@@ -916,7 +946,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[200],
+    borderBottomColor: '#F1F5F9',
   },
   reportTitleContainer: {
     flex: 1,
@@ -924,8 +954,8 @@ const styles = StyleSheet.create({
   },
   reportModalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.gray[900],
+    fontWeight: '700',
+    color: '#1E293B',
     marginBottom: 8,
   },
   reportBadges: {
@@ -939,22 +969,22 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   badgeText: {
-    color: COLORS.white,
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     textTransform: 'capitalize',
   },
   statusBadge: {
-    backgroundColor: COLORS.gray[100],
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: 'flex-start',
   },
   statusBadgeText: {
-    color: COLORS.gray[700],
+    color: '#64748B',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   reportModalContent: {
@@ -962,7 +992,7 @@ const styles = StyleSheet.create({
   },
   reportDescription: {
     fontSize: 14,
-    color: COLORS.gray[700],
+    color: '#64748B',
     lineHeight: 20,
     marginBottom: 16,
   },
@@ -977,21 +1007,26 @@ const styles = StyleSheet.create({
   },
   reportDetailText: {
     fontSize: 14,
-    color: COLORS.gray[700],
+    color: '#64748B',
     flex: 1,
   },
   focusButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#6366F1',
     borderRadius: 12,
     paddingVertical: 14,
     gap: 8,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   focusButtonText: {
-    color: COLORS.white,
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

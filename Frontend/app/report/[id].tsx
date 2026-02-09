@@ -22,7 +22,7 @@ import { Audio, Video, ResizeMode } from 'expo-av';
 import { storage } from '../../utils/storage';
 import { reportService } from '../../services/report.service';
 import { Report, Admin } from '../../types';
-import { COLORS } from '../../constants';
+import { COLORS, getFieldAdminStatusLabel } from '../../constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -405,7 +405,7 @@ export default function ReportDetailsScreen() {
               <Text style={styles.badgeText}>{report.priority.toUpperCase()}</Text>
             </View>
             <View style={[styles.badge, { backgroundColor: getStatusColor(report.status) }]}>
-              <Text style={styles.badgeText}>{report.status.replace('_', ' ').toUpperCase()}</Text>
+              <Text style={styles.badgeText}>{getFieldAdminStatusLabel(report.status)}</Text>
             </View>
           </View>
 
@@ -737,7 +737,7 @@ export default function ReportDetailsScreen() {
       {/* Action Buttons */}
       {!report.isResolved && (
         <View style={styles.actionBar}>
-          {report.status === 'pending' && (
+          {(report.status === 'pending' || report.status === 'assigned') && (
             <TouchableOpacity
               style={[styles.actionButton, styles.startButton]}
               onPress={handleStartWork}
@@ -804,6 +804,7 @@ const styles = StyleSheet.create({
   badgeRow: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 20,
     marginBottom: 12,
   },
   badge: {
