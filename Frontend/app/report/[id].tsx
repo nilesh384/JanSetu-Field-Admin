@@ -21,6 +21,7 @@ import * as Location from 'expo-location';
 import { Audio, Video, ResizeMode } from 'expo-av';
 import { storage } from '../../utils/storage';
 import { reportService } from '../../services/report.service';
+import { whatsAppService } from '../../services/whatsapp.service';
 import { Report, Admin } from '../../types';
 import { COLORS, getFieldAdminStatusLabel } from '../../constants';
 
@@ -256,6 +257,22 @@ export default function ReportDetailsScreen() {
       console.log('Completion response:', response);
 
       if (response.success) {
+        // Trigger WhatsApp notification via local OpenWA instance
+        if (report.user && report.user.phoneNumber) {
+          const messageText = `Hello ${report.user.fullName || 'Citizen'}, your report "${report.title}" has been successfully resolved! Thank you for using Jan Setu.`;
+          whatsAppService.sendTextMessage(report.user.phoneNumber, messageText)
+            .then(res => {
+              if (res.success) {
+                console.log('✅ WhatsApp notification sent successfully');
+              } else {
+                console.warn('⚠️ WhatsApp notification failed:', res.error);
+              }
+            })
+            .catch(err => {
+              console.error('❌ Failed to trigger WhatsApp service:', err);
+            });
+        }
+
         Alert.alert('Success', 'Report marked as Resolved', [
           { text: 'OK', onPress: () => router.back() },
         ]);
