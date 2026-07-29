@@ -1,50 +1,55 @@
-# Welcome to your Expo app 👋
+# JanSetu Field Admin Frontend
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the Expo-based mobile client for field admins and technicians. It is the operational app used to handle assigned complaints on site.
 
-## Get started
+## Key Screens
 
-1. Install dependencies
+- Dashboard for assignment summaries and work metrics
+- Reports list with filters, search, sort, and refresh
+- Map view for route planning and location awareness
+- Report detail view with contact, photos, and work actions
+- Login screen for OTP-based access
+- Profile screen for account details and logout
 
-   ```bash
-   npm install
-   ```
+## Core Features
 
-2. Start the app
+- OTP authentication
+- Assignment tracking
+- Priority and status badges
+- Map markers for report locations
+- Navigation to the incident location
+- Start, update, and complete work flows
+- Media upload for field evidence
+- Local session persistence with AsyncStorage
 
-   ```bash
-   npx expo start
-   ```
+## Tech Stack
 
-In the output, you'll find options to open the app in a
+- Expo
+- React Native
+- TypeScript
+- Expo Router
+- Axios
+- React Native Maps
+- Expo Camera
+- Expo Image Picker
+- Expo Location
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Scripts
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
+npm run android
+npm run ios
+npm run web
+npm run lint
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Folder Layout
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `app/` - routed screens
+- `services/` - API and domain service wrappers
+- `types/` - shared TypeScript definitions
+- `constants/` - app constants
+- `utils/` - storage and helper utilities
+- `assets/` - static images and icons

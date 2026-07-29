@@ -1,263 +1,67 @@
-# 📱 JanSetuAdminApp - Field Admin Mobile Application
+# JanSetu Field Admin App
 
-## 🎯 Project Overview
+This folder contains the field service experience for JanSetu. The mobile app is used by technicians and field admins who receive work assignments, travel to the location, update progress, and close reports after completion.
 
-**JanSetuAdminApp** is a mobile application for field administrators/technicians who travel to locations to fix civic issues reported by citizens through the JanSetu User app.
+## Relationship To The Rest Of The System
 
-### 🔄 Ecosystem Relationship
+- Citizens file complaints from the JanSetu User App
+- Office staff assign and monitor work from the Admin Panel
+- Field admins execute the work from this app
+- All status changes and media uploads flow through the shared Backend API
 
-```
-┌─────────────────────┐
-│  JanSetu User App   │  Citizens report issues
-│  (Mobile - Expo)    │  Upload photos, location
-└──────────┬──────────┘
-           │
-           ↓
-┌─────────────────────┐
-│  JanSetu Admin      │  Office admins manage reports
-│  (Web Dashboard)    │  Assign to field admins
-└──────────┬──────────┘
-           │
-           ↓
-┌─────────────────────┐
-│ JanSetuAdminApp     │  Field admins go on-site
-│ (Mobile - Expo)     │  Fix issues, update status
-└─────────────────────┘
-```
+## What The Field App Supports
 
-## ✨ Key Features Implemented
+- OTP-based login and session handling
+- Dashboard with assignment summaries and daily work snapshots
+- Assigned report list with search, filters, sorting, and refresh
+- Map view for route planning and location context
+- Report detail view with contact info, photo gallery, and navigation actions
+- Start work, progress update, and completion flows
+- Profile and account management
 
-### 🔐 1. Authentication
-- OTP-based email login
-- Secure session management
-- Auto-redirect based on auth status
+## Tech Stack
 
-### 📊 2. Dashboard
-- Welcome screen with admin details
-- Statistics cards (Total, Pending, In Progress, Completed)
-- Performance metrics (weekly/monthly completions, avg time)
-- Today's reports quick view
-- Quick action buttons
+- Expo React Native
+- TypeScript
+- Expo Router
+- Axios for API calls
+- AsyncStorage for local state persistence
+- React Native Maps for map rendering
+- Expo Camera, Image Picker, and Location for field workflows
 
-### 📋 3. Reports List
-- View all assigned reports
-- Advanced filtering (Priority, Status, Category)
-- Search functionality
-- Sort by priority and date
-- Pull-to-refresh
-- Priority/status badges with color coding
+## Project Layout
 
-### 🗺️ 4. Map View
-- Interactive map with all assigned reports
-- Color-coded markers by priority
-- Click marker to view report details
-- Current location tracking
-- Map legend
-- Navigate to report from map
+- `Frontend/app/(tabs)/` - dashboard, reports, map, and profile screens
+- `Frontend/app/report/[id].tsx` - report detail screen
+- `Frontend/services/` - API client and domain services
+- `Frontend/types/` - app-level types
+- `Frontend/constants/` - shared constants
+- `Frontend/utils/` - local storage helpers
 
-### 📍 5. Report Details
-- Complete report information
-- User contact details
-- Photos/media gallery
-- **Navigate to Location** - Opens Google Maps with directions
-- **Call User** - Direct phone call
-- **Start Work** button - Marks as "In Progress"
-- **Mark Complete** button - Upload photos and mark resolved
-- Before/after photo comparison
-- Work duration tracking
+## Main Features
 
-### 👤 6. Profile
-- Admin information display
-- Department and role badges
-- Account statistics
-- Settings options
-- Logout functionality
+- Prioritized report queues for field staff
+- Map-based navigation to assigned work
+- Before and after image capture support
+- Call and location launch actions from the report detail screen
+- Status transitions such as pending, in progress, and completed
+- Performance and activity summaries in the dashboard
 
-## 🛠️ Technology Stack
+## Setup
 
-### Frontend
-- **React Native** with **Expo**
-- **TypeScript** for type safety
-- **Expo Router** for navigation
-- **React Native Maps** for mapping
-- **Expo Camera** & **Image Picker** for photos
-- **Expo Location** for GPS
-- **AsyncStorage** for local data
-- **Axios** for API calls
-
-### Backend
-- **Node.js** with **Express**
-- **PostgreSQL** database
-- **Cloudinary** for image storage
-- **Multer** for file uploads
-- RESTful API architecture
-
-## 📁 Project Structure
-
-```
-JanSetuAdminApp/
-├── Frontend/
-│   ├── app/
-│   │   ├── (tabs)/
-│   │   │   ├── index.tsx       # Dashboard
-│   │   │   ├── reports.tsx     # Reports List
-│   │   │   ├── map.tsx         # Map View
-│   │   │   ├── profile.tsx     # Profile
-│   │   │   └── _layout.tsx     # Tab Navigation
-│   │   ├── report/
-│   │   │   └── [id].tsx        # Report Details
-│   │   ├── index.tsx           # App Entry
-│   │   └── login.tsx           # Login
-│   ├── services/
-│   │   ├── api.ts              # API Client
-│   │   ├── auth.service.ts     # Auth APIs
-│   │   └── report.service.ts   # Report APIs
-│   ├── types/index.ts          # TypeScript Types
-│   ├── constants/index.ts      # App Constants
-│   ├── utils/storage.ts        # Local Storage
-│   └── package.json
-│
-├── Backend/
-│   ├── controllers/
-│   │   └── fieldAdmin.controllers.js
-│   ├── routes/
-│   │   └── fieldAdmin.routes.js
-│   ├── db/
-│   │   └── migrations/
-│   │       └── 001_field_admin_features.sql
-│   ├── app.js
-│   └── package.json
-│
-├── FEATURES.md                 # Detailed feature list
-├── SETUP_GUIDE.md             # Setup instructions
-└── README.md                  # This file
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-```bash
-# Install Node.js 18+
-# Install PostgreSQL
-# Install Expo CLI
-npm install -g expo-cli
-```
-
-### Backend Setup
-```bash
-cd Backend
-npm install
-
-# Configure .env file
-DATABASE_URL=postgresql://user:pass@host:port/db
-CLOUDINARY_CLOUD_NAME=your_name
-CLOUDINARY_API_KEY=your_key
-CLOUDINARY_API_SECRET=your_secret
-
-# Run migrations
-psql -U user -d db -f db/migrations/001_field_admin_features.sql
-
-# Start server
-npm run dev
-```
-
-### Frontend Setup
 ```bash
 cd Frontend
 npm install
-
-# Configure .env
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api/v1
-
-# Start app
 npx expo start
 ```
 
-## 🎨 UI/UX Highlights
+Set the API base URL in the app environment before running the mobile client.
 
-### Color Scheme
-- **Primary Blue**: `#2563eb` - Main actions, headers
-- **Success Green**: `#10b981` - Completed, positive actions
-- **Warning Orange**: `#f59e0b` - Pending, medium priority
-- **Danger Red**: `#ef4444` - Critical, high priority
-- **Clean Grays**: Subtle backgrounds and text
+## Related Docs
 
-### Priority Colors
-- 🔴 **Critical**: `#dc2626`
-- 🟠 **High**: `#ea580c`
-- 🟡 **Medium**: `#f59e0b`
-- 🟢 **Low**: `#10b981`
-
-### Design Patterns
-- Card-based layouts
-- Bottom tab navigation
-- Pull-to-refresh
-- Loading states
-- Empty states
-- Error handling
-- Responsive design
-
-## 🔌 API Endpoints
-
-### Field Admin Routes (`/api/v1/field-admin`)
-
-#### Reports
-- `GET /reports/:adminId` - Get assigned reports
-- `GET /reports/:reportId/details` - Get report details
-- `GET /reports/:adminId/today` - Today's reports
-
-#### Actions
-- `POST /reports/:reportId/start` - Start work
-- `POST /reports/:reportId/update` - Add progress update
-- `POST /reports/:reportId/complete` - Mark resolved
-
-#### Dashboard
-- `GET /dashboard/:adminId` - Get statistics
-
-#### Media
-- `POST /upload-work-photo` - Upload work photo
-
-See `Backend/README_FIELD_ADMIN.md` for detailed API documentation.
-
-## 💾 Database Schema
-
-### New Tables
-
-#### `work_logs`
-Tracks all field admin activities
-```sql
-id, report_id, admin_id, action, notes, photos, 
-location_lat, location_lng, created_at
-```
-
-#### `admin_locations`
-Real-time location tracking
-```sql
-id, admin_id, latitude, longitude, updated_at
-```
-
-### Modified `reports` table
-Added fields:
-- `assigned_admin_id` - Assigned field admin
-- `in_progress_at` - Work start time
-- `in_progress_photos` - WIP photos
-- `work_started_at` - On-site start
-- `work_completed_at` - On-site completion
-- `time_spent_minutes` - Duration
-- `materials_used` - Resources (JSON)
-
-## 🎯 Use Cases
-
-### Typical Workflow
-
-1. **Morning Briefing**
-   - Field admin opens app
-   - Views dashboard with today's assignments
-   - Checks map for route planning
-
-2. **Travel to Location**
-   - Opens report details
-   - Taps "Navigate" → Opens Google Maps
+- `Frontend/README.md`
+- `../Backend/README.md`
+- `../README.md`
    - Drives to location
 
 3. **On-Site Work**
